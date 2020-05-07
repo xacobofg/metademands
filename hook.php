@@ -82,7 +82,7 @@ function plugin_metademands_install() {
    if (!$DB->fieldExists("glpi_plugin_metademands_configs", "childs_parent_content")) {
       $DB->runFile(GLPI_ROOT."/plugins/metademands/install/sql/update-2.5.2.sql");
    }
-   
+
    //version 2.6.2
    if (!$DB->fieldExists("glpi_plugin_metademands_fields", "row_display")) {
       $DB->runFile(GLPI_ROOT."/plugins/metademands/install/sql/update-2.6.2.sql");

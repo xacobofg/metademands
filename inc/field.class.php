@@ -955,7 +955,7 @@ class PluginMetademandsField extends CommonDBChild {
          $html .= "</td>";
          $html .= "</tr><td>";
 
-         $html .= $this->showLinkHtml($metademands->fields["id"],$params, $nbOpt, 1,0);
+         $html .= $this->showLinkHtml($metademands->fields["id"],$params, $nbOpt, 1,0,1);
 
          break;
          case 'parent_field':

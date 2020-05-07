@@ -836,12 +836,25 @@ class PluginMetademandsWizard extends CommonDBTM {
                   $check_value = PluginMetademandsField::_unserialize($data['check_value']);
                   $script2 = "";
                   foreach ($hidden_link as $key => $fields) {
-                     $script .= "if($(this).val() == $check_value[$key]){
+                     if($data["type"] == "radio" || $data["type"] == "checkbox"){
+                        $script = "$('input[name=\"radio[$data[id]]\"]').on('click change', function(e) {
+                           str = e.delegateTarget.name;
+                           str2 = str.substr(str.indexOf(\"[\")+1)
+                           idStr = str2.substr(0, str2.indexOf(\"]\"));
+                           if(e.delegateTarget.value == $check_value[$key] && idStr == $data[id]){
+                              $('[id-field =\"field".$hidden_link[$key]."\"]').show();
+                           }else{
+                               $('[id-field =\"field".$hidden_link[$key]."\"]').hide();
+                           }";
+                     } else{
+                        $script .= "if($(this).val() == $check_value[$key]){
                            $('[id-field =\"field".$hidden_link[$key]."\"]').show();
                         }else{
                             $('[id-field =\"field".$hidden_link[$key]."\"]').hide();
                         }
                          ";
+                     }
+
                      $script2 .= "$('[id-field =\"field".$hidden_link[$key]."\"]').hide();";
                   }
                } else{

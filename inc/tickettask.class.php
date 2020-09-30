@@ -73,7 +73,7 @@ class PluginMetademandsTicketTask extends CommonDBTM {
     * @throws \GlpitestSQLError
     * @throws \GlpitestSQLError
     */
-   static function showTicketTaskForm($metademands_id, $canchangeorder, $input = [], $tickettemplate_id = 0){
+   static function showTicketTaskForm($metademands_id, $canchangeorder, $input = []) {
       global $CFG_GLPI;
 
       $metademands = new PluginMetademandsMetademand();
@@ -111,30 +111,15 @@ class PluginMetademandsTicketTask extends CommonDBTM {
       $values['type']    = Ticket::DEMAND_TYPE;
 
       // Get Template
-      $tt = $ticket->getTicketTemplateToUse($tickettemplate_id, $values['type'], $values['itilcategories_id'], $values['entities_id']);
+      $tt = $ticket->getTicketTemplateToUse(false, $values['type'], $values['itilcategories_id'], $values['entities_id']);
 
       // In percent
       $colsize1 = '13';
       $colsize3 = '87';
 
-      echo "<div id='ticketTemplateMetademand'>";
+      echo "<div>";
       echo "<table class='tab_cadre_fixe' id='mainformtable'>";
       $metademands_ticket = new PluginMetademandsTicket();
-      echo "<tr class='tab_bg_1'>";
-      echo "<th>".__('Template')."</th>";
-      echo "<td>";
-      $opt = ['value'     => $tickettemplate_id,
-              'entity'    => $metademands->fields["entities_id"]];
-      $rand = TicketTemplate::dropdown($opt);
-      echo "</td>";
-      echo "<td colspan='4'></td>";
-      $params = ['tickettemplate_id' => '__VALUE__',
-                 "plugin_metademands_metademands_id" => $metademands_id];
-      Ajax::updateItemOnSelectEvent("dropdown_tickettemplates_id$rand", "ticketTemplateMetademand",
-          $CFG_GLPI['root_doc']."/plugins/metademands/ajax/updateTicketTemplate.php",$params);
-
-      echo "</tr>";
-
       echo "<tr class='tab_bg_1'>";
       $metademands_ticket->getFamily(0, $values);
 
@@ -266,7 +251,7 @@ class PluginMetademandsTicketTask extends CommonDBTM {
          Dropdown::show('Group', ['name'      => 'groups_id_observer',
                                        'value'     => isset($values['groups_id_observer']) ? $values['groups_id_observer'] : 0,
                                        'entity'    => $metademands->fields["entities_id"],
-                                       'condition' => ['is_requester' => 1]]);
+                                       'condition' => ['is_watcher' => 1]]);
          echo "</td>";
       } else {
          echo "<td>";
@@ -342,18 +327,6 @@ class PluginMetademandsTicketTask extends CommonDBTM {
             echo "</td>";
          }
          echo "</tr>";
-      }
-      if ($tt->isMandatoryField('_add_validation')) {
-         echo "<tr class='tab_bg_1'>";
-         echo "<th width='$colsize1%'>".__('Validation request').'&nbsp;:'.$tt->getMandatoryMark('users_id_validate')."</th>";
-         echo "<td>";
-         echo "<input type='hidden' name='_add_validation' value='1'>";
-         $users_id_validate = isset($values['users_id_validate']) ? $values['users_id_validate'] : '';
-
-         User::dropdown(['name'   => 'users_id_validate',
-                         'entity' => $metademands->fields["entities_id"],
-                         'value'  => $users_id_validate,
-                         'right'  => 'all']);
       }
       echo "</table>";
 
@@ -615,18 +588,22 @@ class PluginMetademandsTicketTask extends CommonDBTM {
    function getMetademandForTicketTask($tasks_id, PluginMetademandsMetademand $metademands) {
       global $DB;
 
-      $query = "SELECT `glpi_plugin_metademands_metademands`.*
+      if ($tasks_id > 0) {
+         $query  = "SELECT `glpi_plugin_metademands_metademands`.*
                   FROM `glpi_plugin_metademands_tickettasks`
                   LEFT JOIN `glpi_plugin_metademands_tasks`
                     ON (`glpi_plugin_metademands_tickettasks`.`plugin_metademands_tasks_id` = `glpi_plugin_metademands_tasks`.`id`)
                   LEFT JOIN `glpi_plugin_metademands_metademands`
                     ON (`glpi_plugin_metademands_tasks`.`plugin_metademands_metademands_id` = `glpi_plugin_metademands_metademands`.`id`)
-                  WHERE `glpi_plugin_metademands_tickettasks`.`id` = ".$tasks_id;
-      $result = $DB->query($query);
+                  WHERE `glpi_plugin_metademands_tickettasks`.`id` = " . $tasks_id;
+         $result = $DB->query($query);
 
-      if ($DB->numrows($result)) {
-         $metademands->fields = $DB->fetch_assoc($result);
-      } else {
+         if ($DB->numrows($result)) {
+            $metademands->fields = $DB->fetch_assoc($result);
+         } else {
+            $metademands->getEmpty();
+         }
+      }else {
          $metademands->getEmpty();
       }
    }

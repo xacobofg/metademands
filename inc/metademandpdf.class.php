@@ -422,14 +422,14 @@ class PluginMetaDemandsMetaDemandPdf extends FPDF {
                   break;
 
                case 'link':
-                  $label = __('Link');
-                  $value = $fields['fields'][$elt['id']];
-                  if (strpos($value, 'http://') !== 0 && strpos($value, 'https://') !== 0) {
-                     $value = "http://" . $value;
-                  }
-                  $value = Toolbox::decodeFromUtf8(Toolbox::stripslashes_deep($value));
-                  // Draw line
-                  $this->MultiCellValue($this->value_width, $this->line_height, 'LRBT', 'L', '', 0, '', 'black', $elt['type'], $label, '', $value);
+//                  $label = __('Link');
+//                  $value = $fields['fields'][$elt['id']];
+//                  if (strpos($value, 'http://') !== 0 && strpos($value, 'https://') !== 0) {
+//                     $value = "http://" . $value;
+//                  }
+//                  $value = Toolbox::decodeFromUtf8(Toolbox::stripslashes_deep($value));
+//                  // Draw line
+//                  $this->MultiCellValue($this->value_width, $this->line_height, 'LRBT', 'L', '', 0, '', 'black', $elt['type'], $label, '', $value);
                   break;
 
                case 'upload':
@@ -634,7 +634,10 @@ class PluginMetaDemandsMetaDemandPdf extends FPDF {
       $docitem = new Document_Item();
 
       //entities_id
-      $docitem->add(['itemtype' => "Ticket", "documents_id" => $newdoc, "items_id" => $tickets_id, "entities_id" => $entities_id]);
+      $docitem->add(['itemtype' => "Ticket",
+                     "documents_id" => $newdoc,
+                     "items_id" => $tickets_id,
+                     "entities_id" => $entities_id]);
       return $docitem;
    }
 }

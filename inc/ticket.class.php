@@ -93,7 +93,7 @@ class PluginMetademandsTicket extends CommonDBTM {
     */
    static function showDocumentAddButton($size = 25, $idDiv) {
       echo "<script type='text/javascript'>var nbfiles=1;</script>";
-      echo "<span id='addfilebutton' class='fa fa-plus pointer' title=\"" . __s('Add') . "\" onClick=\"
+      echo "<span id='addfilebutton' class='fas fa-plus pointer' title=\"" . __s('Add') . "\" onClick=\"
                            var row = " . Html::jsGetElementbyID('uploadfiles' . $idDiv) . ";
                            row.append('<br><input type=\'file\' name=\'filename[]\' size=\'$size\'>');
                            nbfiles++;\"" . __s('Add') . "</span>";
@@ -225,19 +225,16 @@ class PluginMetademandsTicket extends CommonDBTM {
                $job = new Ticket();
                if (!empty($values['tickets_id'])) {
                   $job->getFromDB($values['tickets_id']);
-               } else {
-                  $job->getEmpty();
-               }
-
-               // No resolution or close if a son ticket is not solved or closed
-               if ((!isset($job->fields['status']))
-                       || ($job->fields['status'] != Ticket::SOLVED
-                       && $job->fields['status'] != Ticket::CLOSED)) {
-                  if ($with_message) {
-                     Session::addMessageAfterRedirect(__('The demand cannot be resolved or closed until all child tickets are not resolved', 'metademands'), false, ERROR);
+                  // No resolution or close if a son ticket is not solved or closed
+                  if ((!isset($job->fields['status']))
+                      || ($job->fields['status'] != Ticket::SOLVED
+                          && $job->fields['status'] != Ticket::CLOSED)) {
+                     if ($with_message) {
+                        Session::addMessageAfterRedirect(__('The demand cannot be resolved or closed until all child tickets are not resolved', 'metademands'), false, ERROR);
+                     }
+                     $ticket->input = ['id' => $ticket->fields['id']];
+                     return false;
                   }
-                  $ticket->input = ['id' => $ticket->fields['id']];
-                  return false;
                }
             }
          }
@@ -352,7 +349,7 @@ class PluginMetademandsTicket extends CommonDBTM {
                   $tasks = [];
                   foreach ($child_tasks_data as $child_tasks_id) {
                      $tasks[] = $task->getTasks($data['plugin_metademands_metademands_id'],
-                                                ['condition' => '`glpi_plugin_metademands_tasks`.`id` = ' . $child_tasks_id]);
+                                                ['condition' => ['glpi_plugin_metademands_tasks.id' => $child_tasks_id]]);
                   }
 
                   $count++;
@@ -909,14 +906,16 @@ class PluginMetademandsTicket extends CommonDBTM {
       echo __('Family', 'metademands');
       echo "</td>";
       echo "<td>";
-      $condition = "`is_helpdeskvisible`='1'";
-      switch ($input['type']) {
-         case Ticket::DEMAND_TYPE :
-            $condition .= " AND `is_request`='1'";
-            break;
 
-         default: // Ticket::INCIDENT_TYPE :
-            $condition .= " AND `is_incident`='1'";
+      $condition = ['is_helpdeskvisible' => 1];
+
+      switch ($input['type']) {
+         case Ticket::INCIDENT_TYPE :
+            $condition = ['is_incident' => 1];
+            break;
+         case Ticket::DEMAND_TYPE :
+            $condition = ['is_request' => 1];
+            break;
       }
 
       $opt = ['value'     => $input['itilcategories_id'],

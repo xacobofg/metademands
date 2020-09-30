@@ -109,7 +109,7 @@ class PluginMetademandsTicket_Field extends CommonDBTM {
                FROM `glpi_plugin_metademands_tickets_fields`
                LEFT JOIN `glpi_plugin_metademands_fields`
                   ON (`glpi_plugin_metademands_fields`.`id` = `glpi_plugin_metademands_tickets_fields`.`plugin_metademands_fields_id`)
-               WHERE `glpi_plugin_metademands_fields`.`plugin_metademands_tasks_id` = " . $tasks_id . " 
+               WHERE `glpi_plugin_metademands_fields`.`plugin_metademands_tasks_id` IN (" . implode(",",$tasks_id) . ") 
                AND `glpi_plugin_metademands_tickets_fields`.`tickets_id` = " . $parent_tickets_id;
       $result = $DB->query($query);
 

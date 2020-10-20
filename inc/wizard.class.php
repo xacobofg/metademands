@@ -761,8 +761,11 @@ class PluginMetademandsWizard extends CommonDBTM {
                   if ($data['is_mandatory']) {
                      $required = "required";
                   }
+                  if (empty($label2 = PluginMetademandsField::displayField($data['id'], 'label2'))) {
+                     $label2 = $data['label2'];
+                  }
                   echo "<div class=\"form-group col-md-5\">";
-                  echo "<label $required for='field[" . $data['id'] . "-2]' class='col-form-label col-form-label-sm'>" . $data['label2'] . "</label>";
+                  echo "<label $required for='field[" . $data['id'] . "-2]' class='col-form-label col-form-label-sm'>" . $label2 . "</label>";
                   $value2 = '';
                   if (isset($data['value-2'])) {
                      $value2 = $data['value-2'];

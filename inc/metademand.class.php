@@ -533,25 +533,36 @@ class PluginMetademandsMetademand extends CommonDropdown {
       echo "</td>";
 
       echo "</tr>";
+      echo "<tr class='tab_bg_1'>";
+      echo "<td>" . __('Type') . "</td>";
+      echo "<td>";
+      $data = [];
+      $data[Ticket::DEMAND_TYPE] = Ticket::getTicketTypeName(Ticket::DEMAND_TYPE);
+      $data[Ticket::INCIDENT_TYPE] = Ticket::getTicketTypeName(Ticket::INCIDENT_TYPE);
+
+//      echo "<input type='hidden' name='type' value='" . Ticket::DEMAND_TYPE . "'>";
+      Dropdown::showFromArray("type",$data,["value"=>$this->fields["type"]]);
+      echo "<td>";
+      echo "</tr>";
 
       echo "<tr class='tab_bg_1'>";
 
       echo "<td>" . __('Category') . "</td>";
       echo "<td>";
-      echo "<input type='hidden' name='type' value='" . Ticket::DEMAND_TYPE . "'>";
 
-      //            switch ($this->fields['type']) {
-      //               case Ticket::INCIDENT_TYPE :
-      //                  $criteria = ['is_incident' => 1];
-      //                  break;
-      //               case Ticket::DEMAND_TYPE :
-      //                  $criteria = ['is_request' => 1];
-      //                  break;
-      //               default :
-      //                  $criteria = [];
-      //                  break;
-      //            }
-      $criteria = ['is_request' => 1];
+
+      switch ($this->fields['type']) {
+         case Ticket::INCIDENT_TYPE :
+            $criteria = ['is_incident' => 1];
+            break;
+         case Ticket::DEMAND_TYPE :
+            $criteria = ['is_request' => 1];
+            break;
+         default :
+            $criteria = [];
+            break;
+      }
+//      $criteria = ['is_request' => 1];
       $criteria += getEntitiesRestrictCriteria(
          \ITILCategory::getTable(),
          'entities_id',
@@ -689,20 +700,20 @@ class PluginMetademandsMetademand extends CommonDropdown {
             echo $this->getURL($this->fields['id']);
             break;
          case 'itilcategories_id':
-            echo "<input type='hidden' name='type' value='" . Ticket::DEMAND_TYPE . "'>";
+            echo "<input type='hidden' name='type' value='" . $this->fields['type'] . "'>";
 
-            //            switch ($this->fields['type']) {
-            //               case Ticket::INCIDENT_TYPE :
-            //                  $criteria = ['is_incident' => 1];
-            //                  break;
-            //               case Ticket::DEMAND_TYPE :
-            //                  $criteria = ['is_request' => 1];
-            //                  break;
-            //               default :
-            //                  $criteria = [];
-            //                  break;
-            //            }
-            $criteria = ['is_request' => 1];
+            switch ($this->fields['type']) {
+               case Ticket::INCIDENT_TYPE :
+                  $criteria = ['is_incident' => 1];
+                  break;
+               case Ticket::DEMAND_TYPE :
+                  $criteria = ['is_request' => 1];
+                  break;
+               default :
+                  $criteria = [];
+                  break;
+            }
+//            $criteria = ['is_request' => 1];
             $criteria += getEntitiesRestrictCriteria(
                \ITILCategory::getTable(),
                'entities_id',
@@ -935,7 +946,7 @@ class PluginMetademandsMetademand extends CommonDropdown {
     *
     * @return array
     */
-   function listMetademandsCategories($options = []) {
+   function listMetademandsCategories($options = [],$type = Ticket::DEMAND_TYPE) {
       $params['condition'] = [];
 
       foreach ($options as $key => $value) {
@@ -945,7 +956,7 @@ class PluginMetademandsMetademand extends CommonDropdown {
       $result = [];
 
       $dbu       = new DbUtils();
-      $condition = ['type' => Ticket::DEMAND_TYPE]
+      $condition = ['type' => $type]
                    + $dbu->getEntitiesRestrictCriteria($this->getTable(), '', '', true);
 
       if (!empty($params['condition'])) {
@@ -971,7 +982,7 @@ class PluginMetademandsMetademand extends CommonDropdown {
     * @return array
     * @throws \GlpitestSQLError
     */
-   function listMetademands($forceview = false, $options = []) {
+   function listMetademands($forceview = false, $options = [], $type = Ticket::DEMAND_TYPE) {
       global $DB;
 
       $dbu                 = new DbUtils();
@@ -985,7 +996,7 @@ class PluginMetademandsMetademand extends CommonDropdown {
       if (isset($options['empty_value'])) {
          $meta_data[0] = Dropdown::EMPTY_VALUE;
       }
-      $type = Ticket::DEMAND_TYPE;
+
 
       $condition = "1 AND `" . $this->getTable() . "`.`type` = '$type' AND is_active ";
       $condition .= $dbu->getEntitiesRestrictRequest("AND", $this->getTable(), null, null, true);
@@ -1053,8 +1064,7 @@ class PluginMetademandsMetademand extends CommonDropdown {
             $forms[$step][$metademands_id]['form'] = $form_data;
          }
          // Task only for demands
-         if (isset($metademands->fields['type'])
-             && $metademands->fields['type'] == Ticket::DEMAND_TYPE) {
+         if (isset($metademands->fields['type'])) { // TODO OLD Ticket::DEMAND_TYPE
             $tasks      = new PluginMetademandsTask();
             $tasks_data = $tasks->getTasks($metademands_id,
                                            ['condition' => ['glpi_plugin_metademands_tasks.type' => PluginMetademandsTask::TICKET_TYPE]]);
@@ -1063,8 +1073,7 @@ class PluginMetademandsMetademand extends CommonDropdown {
          }
 
          // Check if task are metademands, if some found : recursive call
-         if (isset($metademands->fields['type'])
-             && $metademands->fields['type'] == Ticket::DEMAND_TYPE) {
+         if (isset($metademands->fields['type'])) { // TODO OLD Ticket::DEMAND_TYPE
             $query  = "SELECT `glpi_plugin_metademands_metademandtasks`.`plugin_metademands_metademands_id` AS link_metademands_id
                         FROM `glpi_plugin_metademands_tasks`
                         RIGHT JOIN `glpi_plugin_metademands_metademandtasks`
@@ -1261,7 +1270,11 @@ class PluginMetademandsMetademand extends CommonDropdown {
                // Requester user field
                if (isset($values['fields']['_users_id_requester'])) {
                   $parent_fields['_users_id_requester'] = $values['fields']['_users_id_requester'];
+                  if ($values['fields']['_users_id_requester'] != Session::getLoginUserID()) {
+                     $parent_fields['_users_id_observer'] =Session::getLoginUserID();
+                  }
                }
+
                // Add requester if empty
                $parent_fields['_users_id_requester'] = isset($parent_fields['_users_id_requester']) ? $parent_fields['_users_id_requester'] : "";
                if (empty($parent_fields['_users_id_requester'])) {
@@ -1887,7 +1900,7 @@ class PluginMetademandsMetademand extends CommonDropdown {
             // Add son ticket
             $son_ticket_data['_disablenotif']      = true;
             $son_ticket_data['name']               = self::$SON_PREFIX . $son_ticket_data['tickettasks_name'];
-            $son_ticket_data['type']               = Ticket::DEMAND_TYPE;
+            $son_ticket_data['type']               = $parent_fields['type'];
             $son_ticket_data['entities_id']        = $parent_fields['entities_id'];
             $son_ticket_data['users_id_recipient'] = 0;
             $son_ticket_data['_auto_import']       = 1;

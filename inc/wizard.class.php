@@ -246,6 +246,8 @@ class PluginMetademandsWizard extends CommonDBTM {
                                'right'     => 'all',
                                'rand'      => $rand,
                                'on_change' => "showRequester$rand()"]);
+
+
                echo "<script type='text/javascript' >\n";
                echo "function showRequester$rand() {\n";
                $params = ['value'      => '__VALUE__',
@@ -387,7 +389,7 @@ class PluginMetademandsWizard extends CommonDBTM {
     * @return array
     * @throws \GlpitestSQLError
     */
-   static function selectMetademands($limit = "") {
+   static function selectMetademands($limit = "",$type =Ticket::DEMAND_TYPE )  {
       global $DB;
 
 
@@ -395,6 +397,7 @@ class PluginMetademandsWizard extends CommonDBTM {
       $query       = "SELECT `id`,`name`
                    FROM `glpi_plugin_metademands_metademands`
                    WHERE is_order = 1  OR `glpi_plugin_metademands_metademands`.`itilcategories_id` <> ''
+                   AND type = $type
                         AND `id` NOT IN (SELECT `plugin_metademands_metademands_id` FROM `glpi_plugin_metademands_metademands_resources`) "
                      . $dbu->getEntitiesRestrictRequest(" AND ", 'glpi_plugin_metademands_metademands', '', '', true);
       $query       .= "AND is_active ORDER BY `name` $limit";
@@ -425,6 +428,20 @@ class PluginMetademandsWizard extends CommonDBTM {
       $meta = new PluginMetademandsMetademand();
       $dbu  = new DbUtils();
       if ($config->getField('display_type') == 1) {
+         $data = [];
+         $data[Ticket::DEMAND_TYPE] = Ticket::getTicketTypeName(Ticket::DEMAND_TYPE);
+         $data[Ticket::INCIDENT_TYPE] = Ticket::getTicketTypeName(Ticket::INCIDENT_TYPE);
+
+         echo "<div>";
+
+         $rand = Dropdown::showFromArray("type",$data,["value"=>Ticket::DEMAND_TYPE]);
+         echo "</div>";
+         $params = ['type' => '__VALUE__',"action"=>"icon"];
+         Ajax::updateItemOnSelectEvent("dropdown_type$rand",
+                                       "listmeta",
+                                       $CFG_GLPI["root_doc"] . "/plugins/metademands/ajax/updateListMeta.php",
+                                       $params);
+         echo "<div id='listmeta'>";
          foreach ($metademands as $id => $name) {
 
             $meta = new PluginMetademandsMetademand();
@@ -448,12 +465,24 @@ class PluginMetademandsWizard extends CommonDBTM {
                echo "</p></div></a>";
             }
          }
+         echo "<div>";
       } else {
+         $data = [];
+         $data[Ticket::DEMAND_TYPE] = Ticket::getTicketTypeName(Ticket::DEMAND_TYPE);
+         $data[Ticket::INCIDENT_TYPE] = Ticket::getTicketTypeName(Ticket::INCIDENT_TYPE);
          echo "<div class=\"bt-row\">";
+         $rand = Dropdown::showFromArray("type",$data,["value"=>Ticket::DEMAND_TYPE]);
+         echo "</div>";
+         $params = ['type' => '__VALUE__',"action"=>"dropdown"];
+         Ajax::updateItemOnSelectEvent("dropdown_type$rand",
+                                       "listmeta",
+                                       $CFG_GLPI["root_doc"] . "/plugins/metademands/ajax/updateListMeta.php",
+                                       $params);
+         echo "<div id='listmeta' class=\"bt-row\">";
          $config = PluginMetademandsConfig::getInstance();
          if ($config['enable_families']) {
 
-            echo "<div class=\"bt-feature bt-col-sm-6 bt-col-md-6 \">";
+            echo "<div  class=\"bt-feature bt-col-sm-6 bt-col-md-6 \">";
             // FAMILY
             echo __('Family', 'metademands') . "&nbsp;";
             // Get metademand families

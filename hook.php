@@ -202,6 +202,11 @@ function plugin_metademands_install() {
       $DB->runFile(GLPI_ROOT . "/plugins/metademands/install/sql/update-2.7.6.sql");
    }
 
+   $rep_files_metademands = GLPI_PLUGIN_DOC_DIR . "/metademands";
+   if (!is_dir($rep_files_metademands)) {
+      mkdir($rep_files_metademands);
+   }
+
    return true;
 }
 

@@ -105,7 +105,11 @@ if (isset($_POST["add"])) {
 
    $id = $meta->importXml();
 
-   Html::redirect($meta->getFormURL() . "?id=" . $id);
+   if($id){
+      Html::redirect($meta->getFormURL() . "?id=" . $id);
+   } else {
+      Html::back();
+   }
 
 } else {
 

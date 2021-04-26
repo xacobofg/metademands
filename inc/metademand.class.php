@@ -3700,6 +3700,8 @@ class PluginMetademandsMetademand extends CommonDBTM {
       unset($datas['id']);
       unset($datas['date_creation']);
       unset($datas['date_mod']);
+      unset($datas['itilcategories_id']);
+      $datas['entities_id'] = $_SESSION['glpiactive_entity'];
 
       $mapTableField        = [];
       $mapTableFieldReverse = [];
@@ -3733,9 +3735,10 @@ class PluginMetademandsMetademand extends CommonDBTM {
 
       foreach ($datas as $key => $data) {
          if (is_array($data) && empty($data)) {
-            $datas[$key] = NULL;
+            $datas[$key] = '';
          }
       }
+      $datas     = Toolbox::addslashes_deep($datas);
       $newIDMeta = $metademand->add($datas);
       //      $translations = [];
       foreach ($fields as $k => $field) {
@@ -3778,6 +3781,8 @@ class PluginMetademandsMetademand extends CommonDBTM {
 
          $oldIDField = $fields[$k]["id"];
          unset($fields[$k]["id"]);
+         $fields[$k]['entities_id']                       = $_SESSION['glpiactive_entity'];
+         $fields[$k]                                      = Toolbox::addslashes_deep($fields[$k]);
          $fields[$k]["plugin_metademands_metademands_id"] = $newIDMeta;
          $metaField                                       = new PluginMetademandsField();
          $newIDField                                      = $metaField->add($fields[$k]);
@@ -3802,11 +3807,15 @@ class PluginMetademandsMetademand extends CommonDBTM {
          unset($task['id']);
          unset($task['ancestors_cache']);
          unset($task['sons_cache']);
+         $task       = Toolbox::addslashes_deep($task);
+         $tickettask = $task['tickettask'];
          foreach ($task as $key => $val) {
             if (is_array($val)) {
                $task[$key] = "";
             }
          }
+         $task['entities_id'] = $_SESSION['glpiactive_entity'];
+
          $task['plugin_metademands_metademands_id'] = $newIDMeta;
          $meta_task                                 = new PluginMetademandsTask();
          $newIDTask                                 = $meta_task->add($task);
@@ -3814,12 +3823,12 @@ class PluginMetademandsMetademand extends CommonDBTM {
          $mapTableTask[$oldIDTask]        = $newIDTask;
          $mapTableTaskReverse[$newIDTask] = $oldIDTask;
 
-         $tickettask = $task['tickettask'];
+
          if (is_array($tickettask) && !empty($tickettask)) {
             unset($tickettask['id']);
             foreach ($tickettask as $key => $val) {
                if (is_array($val) && empty($val)) {
-                  $tickettask[$key] = NULL;
+                  $tickettask[$key] = '';
                }
             }
             $tickettask['plugin_metademands_tasks_id'] = $newIDTask;
@@ -3839,7 +3848,10 @@ class PluginMetademandsMetademand extends CommonDBTM {
          $plugin_metademands_tasks_id = PluginMetademandsField::_unserialize($plugin_metademands_tasks_id);
          if (is_array($fields_link)) {
             foreach ($fields_link as $key => $field_link) {
-               $fields_link[$key] = $mapTableField[$field_link];
+               if ($field_link != 0 && isset($mapTableField[$field_link])) {
+                  $fields_link[$key] = $mapTableField[$field_link];
+               }
+
             }
             $fields_link                      = PluginMetademandsField::_serialize($fields_link);
             $fieldMeta->fields["fields_link"] = $fields_link;
@@ -3847,7 +3859,10 @@ class PluginMetademandsMetademand extends CommonDBTM {
 
          if (is_array($hidden_link)) {
             foreach ($hidden_link as $key => $hidden) {
-               $hidden_link[$key] = $mapTableField[$hidden];
+               if ($hidden != 0 && isset($mapTableField[$hidden])) {
+                  $hidden_link[$key] = $mapTableField[$hidden];
+               }
+
             }
             $hidden_link                      = PluginMetademandsField::_serialize($hidden_link);
             $fieldMeta->fields["hidden_link"] = $hidden_link;
@@ -3855,7 +3870,10 @@ class PluginMetademandsMetademand extends CommonDBTM {
 
          if (is_array($plugin_metademands_tasks_id)) {
             foreach ($plugin_metademands_tasks_id as $key => $task) {
-               $plugin_metademands_tasks_id[$key] = $mapTableTask[$task];
+               if ($task != 0 && isset($mapTableTask[$task])) {
+                  $plugin_metademands_tasks_id[$key] = $mapTableTask[$task];
+               }
+
             }
             $plugin_metademands_tasks_id                      = PluginMetademandsField::_serialize($plugin_metademands_tasks_id);
             $fieldMeta->fields["plugin_metademands_tasks_id"] = $plugin_metademands_tasks_id;
